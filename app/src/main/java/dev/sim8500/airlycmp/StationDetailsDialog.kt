@@ -2,16 +2,17 @@ package dev.sim8500.airlycmp
 
 import android.app.AlertDialog
 import android.content.Context
-import android.graphics.Color
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.TextView
+import org.ocpsoft.prettytime.PrettyTime
 import rx.Observable
 import rx.Subscriber
 import rx.android.schedulers.AndroidSchedulers
 import rx.functions.Func2
 import rx.schedulers.Schedulers
+import java.util.*
 
 /**
  * Created by sbernad on 12/10/2017.
@@ -128,7 +129,17 @@ class StationDetailsDialog : Subscriber<GiosSensorDatasetModel>() {
         var sb = StringBuilder()
         sb.append(paramModel.key).append(" = ")
         try {
-            sb.append(paramModel.values.first{ p -> p.value != null }.value)
+
+            val firstNotNull = paramModel.values.first{ p -> p.value != null }
+            sb.append(firstNotNull.value)
+
+            var pt = PrettyTime(Locale.getDefault())
+            val dt = QualityIndexHelper.getParsedDate(firstNotNull.date)
+            if(dt != null)
+            {
+                sb.append("   | ").append(pt.format(dt))
+            }
+
             result = sb.toString()
         }
         catch(e: NoSuchElementException)

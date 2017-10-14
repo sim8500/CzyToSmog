@@ -1,18 +1,15 @@
 package dev.sim8500.airlycmp
 
 import android.graphics.Color
-import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
+import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.view.View
-import android.widget.TextView
-
-import java.lang.ref.WeakReference
-import java.util.ArrayList
-
 import rx.Subscriber
 import rx.android.schedulers.AndroidSchedulers
 import rx.schedulers.Schedulers
+import java.lang.ref.WeakReference
+import java.util.*
 
 
 class MainActivity : AppCompatActivity(), View.OnClickListener {

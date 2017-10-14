@@ -38,7 +38,8 @@ dependencies {
     compile 'com.android.support:design:25.4.0'
     testCompile 'junit:junit:4.12'
     compile "org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"
-    compile "com.squareup.retrofit2:converter-moshi:2.0.0"
+    compile 'com.squareup.retrofit2:converter-moshi:2.0.0'
+    implementation files('libs/prettytime-4.0.1.Final.jar')
 }
 repositories {
     mavenCentral()
