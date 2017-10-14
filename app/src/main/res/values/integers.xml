@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <integer name="STATION_KTW">814</integer>
+    <integer name="STATION_KRK">400</integer>
+    <integer name="STATION_GLC">809</integer>
+    <integer name="STATION_WRO">117</integer>
+    <integer name="STATION_KKZ">568</integer>
+</resources>

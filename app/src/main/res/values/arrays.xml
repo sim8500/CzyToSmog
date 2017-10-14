@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="level_array">
+        <item>#9cff9c</item>
+        <item>#31ff00</item>
+        <item>#31cf00</item>
+        <item>#ffff00</item>
+        <item>#ffcf00</item>
+        <item>#ff9a00</item>
+        <item>#ff6464</item>
+        <item>#ff0000</item>
+        <item>#990000</item>
+        <item>#ce30ff</item>
+    </string-array>
+</resources>
