@@ -1,10 +1,12 @@
 package dev.sim8500.airlycmp
 
+import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.view.View
+import android.widget.Button
 import rx.Subscriber
 import rx.android.schedulers.AndroidSchedulers
 import rx.schedulers.Schedulers
@@ -14,14 +16,15 @@ import java.util.*
 
 class MainActivity : AppCompatActivity(), View.OnClickListener {
 
-    protected var measureFields: MutableList<StationStatusView> = ArrayList(5)
+    protected var measureFields: MutableList<StationStatusView> = ArrayList(4)
     protected var currentIndex = 0
     protected var clickedIndex = 0
-    protected var qualityIndexModels : Array<GiosQualityIndexModel?> = arrayOfNulls(5)
+    protected var qualityIndexModels : Array<GiosQualityIndexModel?> = arrayOfNulls(4)
+    protected var findMoreButton : Button? = null
 
-    protected val stationsArray = intArrayOf(R.integer.STATION_KTW, R.integer.STATION_GLC, R.integer.STATION_KRK, R.integer.STATION_KKZ, R.integer.STATION_WRO)
+    protected val stationsArray = intArrayOf(R.integer.STATION_KTW, R.integer.STATION_GLC, R.integer.STATION_KRK, R.integer.STATION_WRO)
 
-    protected val namesArray = intArrayOf(R.string.STATION_KTW, R.string.STATION_GLC, R.string.STATION_KRK, R.string.STATION_KKZ, R.string.STATION_WRO)
+    protected val namesArray = intArrayOf(R.string.STATION_KTW, R.string.STATION_GLC, R.string.STATION_KRK, R.string.STATION_WRO)
 
     protected var currentColorIndex : Int? = null;
 
@@ -73,6 +76,8 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        findMoreButton = this.findViewById(R.id.findMoreButton) as? Button
+        findMoreButton?.setOnClickListener { v -> onFindMoreClicked() }
         measureFields.clear()
 
         var mfields : MutableList<StationStatusView?> = mutableListOf();
@@ -80,7 +85,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         mfields.add(this.findViewById(R.id.measureField2) as? StationStatusView)
         mfields.add(this.findViewById(R.id.measureField3) as? StationStatusView)
         mfields.add(this.findViewById(R.id.measureField4) as? StationStatusView)
-        mfields.add(this.findViewById(R.id.measureField5) as? StationStatusView)
 
         measureFields.addAll(elements = mfields.requireNoNulls())
     }
@@ -134,6 +138,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
             if (isModelValid) {
                 val finalIndex = calculateFinalIndex(model)
+                ssv.nameTextView.setBackgroundColor(Color.WHITE)
                 ssv.statusTextView.setBackgroundColor(QualityIndexHelper.getQualityIndexColor(this, finalIndex))
                 ssv.statusTextView.text = finalIndex.toString()
             }
@@ -173,5 +178,9 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                     .unsubscribeOn(Schedulers.io())
                     .subscribe(SensorInfoSub(this@MainActivity))
         }
+    }
+
+    fun onFindMoreClicked() {
+        this.startActivity(Intent(this, StationsActivity::class.java))
     }
 }

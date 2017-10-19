@@ -56,7 +56,7 @@ class StationDetailsDialog : Subscriber<GiosSensorDatasetModel>() {
                 break;
         }
 
-        if(p1Id != -1 && p2Id != -1) {
+        if(p1Id != -1 || p2Id != -1) {
             loadData(p1Id, p2Id)
         }
         else {
@@ -74,8 +74,8 @@ class StationDetailsDialog : Subscriber<GiosSensorDatasetModel>() {
         var rqMan = RequestsManager.getInstance()
         var giosService = rqMan.getGiosObservableService(GiosDataService::class.java)
 
-        Observable.zip( giosService.getSensorData(p1Id),
-                        giosService.getSensorData(p2Id),
+        Observable.zip( giosService.getSensorData(p1Id).onErrorReturn { e -> null},
+                        giosService.getSensorData(p2Id).onErrorReturn { e -> null },
                         Func2<GiosSensorDataModel, GiosSensorDataModel, GiosSensorDatasetModel> {
                             p1, p2 -> prepareDataset(p1, p2)
                             }
@@ -86,7 +86,7 @@ class StationDetailsDialog : Subscriber<GiosSensorDatasetModel>() {
                 .subscribe(this)
     }
 
-    private fun prepareDataset(p1Data : GiosSensorDataModel, p2Data : GiosSensorDataModel) : GiosSensorDatasetModel {
+    private fun prepareDataset(p1Data : GiosSensorDataModel?, p2Data : GiosSensorDataModel?) : GiosSensorDatasetModel {
         return GiosSensorDatasetModel(p1Data, p2Data)
     }
 
@@ -104,13 +104,23 @@ class StationDetailsDialog : Subscriber<GiosSensorDatasetModel>() {
 
             var pm10Model : GiosSensorDataModel? = null
             var pm25Model : GiosSensorDataModel? = null
-            if(m.param1.key.contains(PM10_PARAM_CODE)) {
-                pm10Model = m.param1
-                pm25Model = m.param2
+
+            if(m.param1 != null) {
+                if(m.param1.key.contains(PM10_PARAM_CODE)) {
+                    pm10Model = m.param1
+                }
+                else if(m.param1.key.contains(PM25_PARAM_CODE)) {
+                    pm25Model = m.param1
+                }
             }
-            else {
-                pm10Model = m.param2
-                pm25Model = m.param1
+
+            if(m.param2 != null) {
+                if(m.param2.key.contains(PM10_PARAM_CODE)) {
+                    pm10Model = m.param2
+                }
+                else if(m.param2.key.contains(PM25_PARAM_CODE)) {
+                    pm25Model = m.param2
+                }
             }
 
             p1TxtView?.text = extractParamData(pm10Model)
@@ -123,30 +133,28 @@ class StationDetailsDialog : Subscriber<GiosSensorDatasetModel>() {
         }
     }
 
-    fun extractParamData(paramModel : GiosSensorDataModel) : String? {
+    fun extractParamData(paramModel : GiosSensorDataModel?) : String? {
         var result : String? = null
 
-        var sb = StringBuilder()
-        sb.append(paramModel.key).append(" = ")
-        try {
+        if(paramModel != null) {
+            var sb = StringBuilder()
+            sb.append(paramModel.key).append(" = ")
+            try {
 
-            val firstNotNull = paramModel.values.first{ p -> p.value != null }
-            sb.append(firstNotNull.value)
+                val firstNotNull = paramModel.values.first { p -> p.value != null }
+                sb.append(firstNotNull.value)
 
-            var pt = PrettyTime(Locale.getDefault())
-            val dt = QualityIndexHelper.getParsedDate(firstNotNull.date)
-            if(dt != null)
-            {
-                sb.append("   | ").append(pt.format(dt))
+                var pt = PrettyTime(Locale.getDefault())
+                val dt = QualityIndexHelper.getParsedDate(firstNotNull.date)
+                if (dt != null) {
+                    sb.append("   | ").append(pt.format(dt))
+                }
+
+                result = sb.toString()
+            } catch (e: NoSuchElementException) {
+                Log.e("StationDetailsDialog", e?.toString())
             }
-
-            result = sb.toString()
         }
-        catch(e: NoSuchElementException)
-        {
-            Log.e("StationDetailsDialog", e?.toString())
-        }
-
         return result;
     }
 }

@@ -5,5 +5,7 @@
     <string name="STATION_GLC">GLIWICE</string>
     <string name="STATION_WRO">WROCŁAW</string>
     <string name="STATION_KKZ">KĘDZIERZYN-K.</string>
-    <string name="title_activity_stations">StationsActivity</string>
+    <string name="BTN_FIND_MORE">Find More...</string>
+    <string name="BTN_SORT_BY_LOCATION">Sort by location</string>
+    <string name="BTN_DETAILS">Show Details</string>
 </resources>

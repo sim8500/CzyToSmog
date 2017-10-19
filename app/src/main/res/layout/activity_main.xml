@@ -26,6 +26,17 @@
             tools:layout_editor_absoluteY="8dp">
 
 
+            <Button
+                android:id="@+id/findMoreButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:autoText="true"
+                android:backgroundTint="@android:color/holo_green_dark"
+                android:text="@string/BTN_FIND_MORE"
+                android:theme="@android:style/Widget.Holo.Light.Button"
+                tools:layout_editor_absoluteX="126dp"
+                tools:layout_editor_absoluteY="0dp" />
+
             <view
                 android:id="@+id/measureField1"
                 class="dev.sim8500.airlycmp.StationStatusView"
@@ -53,14 +64,6 @@
 
             <view
                 android:id="@+id/measureField4"
-                class="dev.sim8500.airlycmp.StationStatusView"
-                layout="@layout/view_station_row"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout="@layout/view_station_row" />
-
-            <view
-                android:id="@+id/measureField5"
                 class="dev.sim8500.airlycmp.StationStatusView"
                 layout="@layout/view_station_row"
                 android:layout_width="match_parent"

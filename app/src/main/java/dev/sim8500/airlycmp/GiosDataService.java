@@ -20,4 +20,7 @@ public interface GiosDataService {
 
     @GET("/pjp-api/rest/data/getData/{sensor}")
     public Observable<GiosSensorDataModel> getSensorData(@Path("sensor") int sensorId);
+
+    @GET("/pjp-api/rest/station/findAll")
+    public Observable<List<GiosStationDataModel>> getStations();
 }

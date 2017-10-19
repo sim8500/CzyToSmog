@@ -32,7 +32,7 @@ object QualityIndexHelper {
 
     fun getParsedDate(dateString: String): Date? {
 
-        val sdf = SimpleDateFormat("yyyy-MM-dd hh:mm:ss", Locale.getDefault())
+        val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
         sdf.setTimeZone(TimeZone.getTimeZone("Europe/Warsaw"))
         var resultDate: Date? = null
         try {
