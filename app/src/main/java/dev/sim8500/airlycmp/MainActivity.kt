@@ -14,7 +14,7 @@ import java.lang.ref.WeakReference
 import java.util.*
 
 
-class MainActivity : AppCompatActivity(), View.OnClickListener {
+class MainActivity : QualityIndexBaseActivity(), View.OnClickListener {
 
     protected var measureFields: MutableList<StationStatusView> = ArrayList(4)
     protected var currentIndex = 0
@@ -27,28 +27,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     protected val namesArray = intArrayOf(R.string.STATION_KTW, R.string.STATION_GLC, R.string.STATION_KRK, R.string.STATION_WRO)
 
     protected var currentColorIndex : Int? = null;
-
-    protected class MeasurementsSub constructor(activity: MainActivity) : Subscriber<GiosQualityIndexModel>() {
-        internal var activityRef: WeakReference<MainActivity>
-
-        init {
-            activityRef = WeakReference(activity)
-
-        }
-
-        override fun onCompleted() {
-            Log.d("MainActivity", "onCompleted()")
-
-        }
-
-        override fun onError(e: Throwable) {
-            Log.e("MainActivity", e.toString())
-        }
-
-        override fun onNext(model: GiosQualityIndexModel) {
-                activityRef.get()?.onMeasurementsLoaded(model)
-        }
-    }
 
     protected class SensorInfoSub constructor(activity: MainActivity) : Subscriber<List<GiosSensorInfoModel>>() {
         internal var activityRef: WeakReference<MainActivity>
@@ -126,25 +104,28 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                 .subscribe(MeasurementsSub(this@MainActivity))
     }
 
-    fun onMeasurementsLoaded(model: GiosQualityIndexModel?) {
+    override fun onMeasurementsLoaded(model: GiosQualityIndexModel?) {
+        super.onMeasurementsLoaded(model)
+
+        if (currentIndex < measureFields.size) {
+            val ssv = measureFields[currentIndex]
+            ssv.setOnClickListener(this)
+        }
+        continueLoading(false)
+    }
+
+    override fun onValidMeasurementsLoaded(model: GiosQualityIndexModel) {
 
         if (currentIndex < measureFields.size) {
             Log.d("MainActivity", String.format("onMeasurementsLoaded for %d", currentIndex))
             qualityIndexModels[currentIndex] = model
+
+            val finalIndex = calculateFinalIndex(model)
             val ssv = measureFields[currentIndex]
-            ssv.setOnClickListener(this)
-
-            val isModelValid = (model?.pm25IndexLevel != null && model?.pm10IndexLevel != null) ?: false
-
-            if (isModelValid) {
-                val finalIndex = calculateFinalIndex(model)
-                ssv.nameTextView.setBackgroundColor(Color.WHITE)
-                ssv.statusTextView.setBackgroundColor(QualityIndexHelper.getQualityIndexColor(this, finalIndex))
-                ssv.statusTextView.text = finalIndex.toString()
-            }
-            continueLoading(false)
+            ssv.nameTextView.setBackgroundColor(Color.WHITE)
+            ssv.statusTextView.setBackgroundColor(QualityIndexHelper.getQualityIndexColor(this, finalIndex))
+            ssv.statusTextView.text = finalIndex.toString()
         }
-
     }
 
     fun onSensorInfoLoaded(model: List<GiosSensorInfoModel>?) {
@@ -157,11 +138,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         }
 
     }
-
-    protected fun calculateFinalIndex(model: GiosQualityIndexModel?): Int {
-        return Math.max(model?.pm10IndexLevel?.id ?: -1, model?.pm25IndexLevel?.id ?: -1)
-    }
-
 
     override fun onClick(v: View?) {
         var stationStatusView =  v as? StationStatusView

@@ -13,18 +13,25 @@ import rx.Subscriber
 import rx.android.schedulers.AndroidSchedulers
 import rx.schedulers.Schedulers
 import java.lang.ref.WeakReference
-import com.google.android.gms.location.LocationServices
 import android.Manifest.permission.ACCESS_FINE_LOCATION
+import android.app.PendingIntent
 import android.support.v4.app.ActivityCompat.requestPermissions
 import android.support.v4.app.ActivityCompat.shouldShowRequestPermissionRationale
 import android.content.pm.PackageManager
+import android.os.Looper
 import android.support.v4.app.ActivityCompat
+import android.support.annotation.NonNull
+import android.support.design.widget.Snackbar
+import android.widget.Toast
+import com.google.android.gms.location.*
+import com.google.android.gms.tasks.OnCompleteListener
+import com.google.android.gms.tasks.Task
 
 
 /**
  * Created by sbernad on 16/10/2017.
  */
-class StationsActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
+class StationsActivity : QualityIndexBaseActivity() {
 
     protected class StationsSub constructor(activity: StationsActivity) : Subscriber<List<GiosStationDataModel>>() {
         internal var activityRef: WeakReference<StationsActivity>
@@ -52,8 +59,10 @@ class StationsActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallback
     protected var listView : ListView? = null
     protected var stationsAdapter : StationsAdapter? = null
     protected var sortByButton : Button? = null
+    protected var client : FusedLocationProviderClient? = null
+    protected lateinit var currentSensorsList : List<GiosSensorInfoModel>
+    protected var currentStationName : String? = null
 
-    protected var googleClient : GoogleApiClient? = null
     protected var lastLocation : Location? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -64,20 +73,16 @@ class StationsActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallback
         sortByButton = this.findViewById(R.id.sortByButton) as? Button
 
         sortByButton?.setOnClickListener{ v -> onSortByClicked() }
-        if (googleClient == null) {
-            googleClient = GoogleApiClient.Builder(this)
-                    .addConnectionCallbacks(this)
-                    .addOnConnectionFailedListener(this)
-                    .addApi(LocationServices.API)
-                    .build()
-        }
+
+        client = LocationServices.getFusedLocationProviderClient(this)
 
     }
 
     public override fun onStart() {
-        googleClient?.connect()
 
         super.onStart()
+
+        checkPermissionAndRequestLocation()
 
         if(stationsList.isEmpty()) {
             RequestsManager.getInstance()
@@ -91,7 +96,6 @@ class StationsActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallback
     }
 
     public override fun onStop() {
-        googleClient?.disconnect()
 
         super.onStop()
     }
@@ -110,11 +114,12 @@ class StationsActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallback
 
     }
 
-    override fun onConnected(p0: Bundle?) {
+    fun checkPermissionAndRequestLocation() {
         if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) !== PackageManager.PERMISSION_GRANTED) {
 
             if (ActivityCompat.shouldShowRequestPermissionRationale(this, ACCESS_COARSE_LOCATION)) {
                 // Display UI and wait for user interaction
+                TODO("handle a case with UI interaction for permissions")
             } else {
                 ActivityCompat.requestPermissions(
                         this, arrayOf<String>(android.Manifest.permission.ACCESS_COARSE_LOCATION),
@@ -122,17 +127,18 @@ class StationsActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallback
             }
         } else {
             // permission has been granted, continue as usual
-            lastLocation = LocationServices.FusedLocationApi.getLastLocation(googleClient)
+
+            client?.requestLocationUpdates(LocationRequest.create(),
+                                            object : LocationCallback(){
+                                                    override fun onLocationResult(p0: LocationResult?) {
+                                                        super.onLocationResult(p0)
+                                                        lastLocation = p0?.lastLocation
+                                                    }
+                                            },
+                                            Looper.myLooper() )
         }
     }
 
-    override fun onConnectionSuspended(p0: Int) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
-    override fun onConnectionFailed(p0: ConnectionResult) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
 
     fun onSortByClicked() {
         if(lastLocation != null) {
@@ -141,12 +147,25 @@ class StationsActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallback
     }
 
     fun onDetailsClicked(list : List<GiosSensorInfoModel>?, name : String?) {
-        if(list != null) {
-            var dialog = StationDetailsDialog()
-            var dialogModel = GiosStationDetailsModel(sensors = list, paramIndices = null, name = name)
-            dialog.prepareDialog(this, dialogModel)
+        if(list != null && list.isNotEmpty()) {
+            currentSensorsList = list
+            currentStationName = name
+            RequestsManager.getInstance()
+                    .getGiosObservableService(GiosDataService::class.java)
+                    .getQualityIndexDataFor(currentSensorsList.get(0).stationId)
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .unsubscribeOn(Schedulers.io())
+                    .subscribe(MeasurementsSub(this))
 
-            dialog.show()
         }
+    }
+
+    override fun onValidMeasurementsLoaded(model: GiosQualityIndexModel) {
+        var dialog = StationDetailsDialog()
+        var dialogModel = GiosStationDetailsModel(sensors = currentSensorsList, paramIndices = model, name = currentStationName)
+        dialog.prepareDialog(this, dialogModel)
+
+        dialog.show()
     }
 }
